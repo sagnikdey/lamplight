@@ -1,0 +1,21 @@
+{
+  "name": "@lamplight/tokens",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./css/brand": "./css/brand.css",
+    "./css/alias": "./css/alias.css",
+    "./css/mapped.light": "./css/mapped.light.css",
+    "./css/mapped.dark": "./css/mapped.dark.css",
+    "./css/responsive": "./css/responsive.css",
+    "./css/tailwind-theme": "./css/tailwind-theme.css"
+  },
+  "scripts": {
+    "build": "node sd.config.js",
+    "watch": "node --watch sd.config.js"
+  },
+  "dependencies": {
+    "style-dictionary": "^5.5.0"
+  }
+}

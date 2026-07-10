@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── Token sync ───────────────────────────────────────────────────────────────
+  # Re-runs Style Dictionary on every push. If the CSS output changed but the
+  # JSON wasn't updated (e.g. manual CSS edit), the diff will show it clearly.
+  tokens:
+    name: Build tokens
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run tokens
+      - name: Fail if generated CSS is out of sync
+        run: |
+          git diff --exit-code tokens/css/ || \
+          (echo "❌ Token CSS is out of sync. Run 'npm run tokens' and commit the result." && exit 1)
+
+  # ── Typecheck + lint ─────────────────────────────────────────────────────────
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+
+  # ── Storybook deploy (main branch only) ──────────────────────────────────────
+  storybook:
+    name: Deploy Storybook
+    runs-on: ubuntu-latest
+    needs: [tokens, typecheck]
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run tokens
+      - run: npm run build-storybook --workspace=packages/ui
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./storybook-static

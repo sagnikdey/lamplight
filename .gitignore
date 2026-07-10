@@ -1,0 +1,8 @@
+node_modules
+.next
+dist
+storybook-static
+# Token CSS is generated — commit it so CI can diff it
+# tokens/css  <-- intentionally NOT ignored
+.DS_Store
+*.local

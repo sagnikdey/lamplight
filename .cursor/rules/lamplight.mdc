@@ -1,0 +1,595 @@
+---
+description: Lamplight Design System — coding standards for Next.js, TypeScript, and Tailwind v4. Apply to all files under apps/ and packages/ui/.
+globs:
+  - "apps/**/*.{ts,tsx}"
+  - "packages/ui/**/*.{ts,tsx}"
+alwaysApply: true
+---
+
+# Lamplight Design System — Cursor Rules
+
+You are building the **Lamplight Design System** on Next.js 15, TypeScript, Tailwind v4, and Radix UI.
+The source of truth for all visual decisions is the Figma file. All tokens are emitted by Style Dictionary into `tokens/css/` and consumed via CSS custom properties.
+
+---
+
+## 1. Token Architecture — understand this before touching anything visual
+
+The system has three layers. Only the bottom layer is consumed by components and app code.
+
+```
+Brand (primitives)  →  Alias (semantic names)  →  Mapped (component-facing, light + dark)
+ --brand-scale-400       --alias-spacing-lg          --color-surface-action
+ --brand-brand-600       --alias-border-radius-md     --color-text-body
+                                                      --color-border-focus
+```
+
+**Rule: components and app pages reference only Mapped tokens and Alias spacing/radius tokens.
+Never reference Brand tokens directly in component code.**
+
+```tsx
+// ✅ Correct — Mapped token
+className="bg-[var(--color-surface-action)] text-[color:var(--color-text-on-action)]"
+
+// ❌ Wrong — Brand token referenced directly
+className="bg-[var(--brand-brand-600)]"
+
+// ❌ Wrong — hardcoded value
+className="bg-[#ac4e2c]"
+style={{ backgroundColor: '#ac4e2c' }}
+```
+
+---
+
+## 2. No inline styles — ever
+
+`style={{}}` props are **banned** for anything a token or Tailwind utility can express.
+The only legitimate uses of `style` are: dynamic numeric values that cannot be known at build time (e.g. a progress bar width from state, a canvas transform), or third-party animation libraries that require it.
+
+```tsx
+// ✅ Correct
+<div className="bg-[var(--color-surface-raised)] p-[var(--spacing-lg)]" />
+
+// ❌ Wrong — every one of these has a token equivalent
+<div style={{ backgroundColor: 'var(--color-surface-raised)' }} />
+<div style={{ padding: '16px' }} />
+<div style={{ color: '#383838' }} />
+<div style={{ borderRadius: '4px' }} />
+<div style={{ fontFamily: 'Open Sans' }} />
+<div style={{ zIndex: 400 }} />
+```
+
+---
+
+## 3. Colour — always use semantic Mapped tokens
+
+Never use hex, rgb, or hsl values. Never use Tailwind's built-in colour palette (blue-500, gray-200, etc.) — those bypass the token system and break dark mode.
+
+### Full token reference
+
+**Text**
+```
+--color-text-headings        heading text
+--color-text-body            primary body copy
+--color-text-body-secondary  secondary / helper text
+--color-text-action          links, interactive text
+--color-text-action-hover    hovered links
+--color-text-action-active   pressed links
+--color-text-on-action       text on filled action surfaces (buttons)
+--color-text-inverse         text on inverted surfaces (tooltips)
+--color-text-disabled        disabled labels
+--color-text-error           error messages
+--color-text-success         success messages
+--color-text-warning         warning messages
+--color-text-information     info messages
+```
+
+**Icons**
+```
+--color-icon-default         default icon fill
+--color-icon-action          interactive icon
+--color-icon-action-hover
+--color-icon-action-active
+--color-icon-on-action       icon on filled button
+--color-icon-disabled
+--color-icon-error
+--color-icon-success
+--color-icon-warning
+--color-icon-information
+```
+
+**Surfaces**
+```
+--color-surface-page         page background (outermost)
+--color-surface-default      card / panel background
+--color-surface-raised       elevated cards (pair with Elevation/Raised shadow)
+--color-surface-overlay      dropdowns, modals, popovers
+--color-surface-sunken       wells, input backgrounds, code blocks
+--color-surface-action       filled button / primary action background
+--color-surface-action-hover
+--color-surface-action-active
+--color-surface-disabled     disabled element fill
+--color-surface-error        error state fill
+--color-surface-success
+--color-surface-warning
+--color-surface-information
+```
+
+**Borders**
+```
+--color-border-default       default dividers
+--color-border-bold          high-emphasis borders (selected rows, table headers)
+--color-border-action        interactive element border
+--color-border-action-hover
+--color-border-action-active
+--color-border-focus         focus ring colour
+--color-border-disabled
+--color-border-error
+--color-border-success
+--color-border-warning
+--color-border-information
+```
+
+**Tailwind v4 utility syntax for colours:**
+```tsx
+// Backgrounds
+"bg-[var(--color-surface-action)]"
+
+// Text — always use color: prefix to force correct CSS property
+"text-[color:var(--color-text-body)]"
+
+// Borders
+"border border-[color:var(--color-border-default)]"
+
+// Fill (SVG)
+"fill-[var(--color-icon-action)]"
+
+// With opacity modifier
+"bg-[var(--color-surface-action-hover)]/10"
+```
+
+---
+
+## 4. Spacing — use Alias spacing tokens, never arbitrary px
+
+```
+--spacing-xs   = 4px   tight internal padding
+--spacing-sm   = 8px   compact padding, icon gaps
+--spacing-md   = 12px  default component padding
+--spacing-lg   = 16px  gaps between elements
+--spacing-xl   = 24px  section-internal spacing
+--spacing-2xl  = 32px  between sections
+--spacing-3xl  = 48px  page-level spacing
+```
+
+```tsx
+// ✅ Correct
+"px-[var(--spacing-xl)] py-[var(--spacing-lg)]"
+"gap-[var(--spacing-sm)]"
+"mt-[var(--spacing-2xl)]"
+
+// ❌ Wrong
+"px-6"        // arbitrary Tailwind step — not a Lamplight token
+"p-4"         // same
+"gap-2"       // same
+"mt-8"        // same
+style={{ padding: '24px' }}
+```
+
+---
+
+## 5. Border radius — use Alias radius tokens
+
+```
+--border-radius-none  = 0
+--border-radius-sm    = 2px
+--border-radius-md    = 4px   inputs, cards
+--border-radius-lg    = 8px   modals, larger panels
+--border-radius-xl    = 16px  feature cards
+--border-radius-full  = 999px pill / fully rounded (buttons, badges)
+```
+
+```tsx
+// ✅ Correct
+"rounded-[var(--border-radius-md)]"
+"rounded-[var(--border-radius-full)]"
+
+// ❌ Wrong
+"rounded"
+"rounded-lg"
+"rounded-full"
+style={{ borderRadius: '4px' }}
+```
+
+---
+
+## 6. Typography — use font and type scale tokens
+
+```
+--font-heading   = Merriweather  (h1–h6)
+--font-body      = Open Sans     (body, UI labels, inputs)
+--font-mono      = JetBrains Mono (code, badges, numeric data)
+
+--type-h1-size / --type-h1-lh    (responsive via CSS vars)
+--type-h2-size / --type-h2-lh
+...
+--type-paragraph-sm-size = 14px
+--type-paragraph-md-size = 16px
+--type-paragraph-xsm-size = 12px
+```
+
+```tsx
+// ✅ Correct
+"font-[family-name:var(--font-body)] text-[length:var(--type-paragraph-sm-size)]"
+"font-[family-name:var(--font-heading)]"
+"font-[family-name:var(--font-mono)] text-[12px]"
+
+// ❌ Wrong
+"font-sans"
+"font-serif"
+"text-sm"          // uses Tailwind's scale, not Lamplight's
+"text-base"
+style={{ fontFamily: 'Open Sans' }}
+style={{ fontSize: '14px' }}
+```
+
+---
+
+## 7. Z-index — use Brand z-index tokens
+
+```
+--brand-z-index-base      = 0
+--brand-z-index-dropdown  = 100
+--brand-z-index-sticky    = 200
+--brand-z-index-overlay   = 300  (modal backdrop)
+--brand-z-index-modal     = 400
+--brand-z-index-popover   = 500
+--brand-z-index-toast     = 600
+```
+
+```tsx
+// ✅ Correct
+"z-[var(--brand-z-index-modal)]"
+"z-[var(--brand-z-index-toast)]"
+
+// ❌ Wrong
+"z-50"
+"z-[9999]"
+style={{ zIndex: 400 }}
+```
+
+---
+
+## 8. Elevation (shadows) — use effect styles
+
+Use the four Figma effect styles as named CSS shadow utilities. Add to `globals.css` under `@layer utilities` if not yet present:
+
+```css
+@layer utilities {
+  .shadow-raised  { box-shadow: 0 1px 2px  rgba(12,12,13,0.10); }
+  .shadow-overlay { box-shadow: 0 2px 8px  rgba(12,12,13,0.12), 0 0 1px 1px rgba(12,12,13,0.06); }
+  .shadow-modal   { box-shadow: 0 8px 16px rgba(12,12,13,0.16); }
+  .shadow-toast   { box-shadow: 0 16px 32px rgba(12,12,13,0.20); }
+}
+```
+
+```tsx
+// ✅ Correct
+<div className="bg-[var(--color-surface-raised)] shadow-raised rounded-[var(--border-radius-lg)]" />
+<div className="bg-[var(--color-surface-overlay)] shadow-overlay" />
+
+// ❌ Wrong
+style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}
+"shadow-md"
+"shadow-lg"
+```
+
+---
+
+## 9. Focus rings — use the Focus Ring tokens
+
+All interactive elements must have a visible focus ring using `Border/focus`. Never remove focus rings — only replace `:focus` with `:focus-visible`.
+
+```
+--focus-ring-width  = 2px
+--focus-ring-offset = 2px
+--color-border-focus
+```
+
+**For Radix-based components (Button, Checkbox, etc.):** the focus ring is an absolute `<span>` child shown via `group-focus-visible:opacity-100`. Follow the Button pattern.
+
+**For native inputs:** use `focus-visible:ring` utilities:
+```tsx
+"outline-none focus-visible:ring-[length:var(--focus-ring-width)] focus-visible:ring-offset-[length:var(--focus-ring-offset)] focus-visible:ring-[var(--color-border-focus)]"
+```
+
+---
+
+## 10. Dark mode — never hardcode for a theme
+
+Dark mode is handled by `[data-theme="dark"]` on `<html>`, set by `next-themes`. Mapped tokens switch automatically — **never** write `dark:` Tailwind variants for colour; they fight the token layer.
+
+```tsx
+// ✅ Correct — token switches automatically
+<div className="bg-[var(--color-surface-default)] text-[color:var(--color-text-body)]" />
+
+// ❌ Wrong — bypasses the token system
+<div className="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100" />
+```
+
+The only valid use of `dark:` is for non-colour structural adjustments (e.g. `dark:shadow-none` if a shadow needs to disappear in dark mode and there's no token for it yet — add the token instead if possible).
+
+---
+
+## 11. Component usage — always reach for @lamplight/ui first
+
+Before writing any UI, check if `@lamplight/ui` exports it.
+
+```tsx
+import {
+  Button, IconWrapper, Badge,
+  Input, InputLabel, InputCaption,
+  Checkbox, IndeterminateCheckbox,
+  Divider,
+  cn,
+} from '@lamplight/ui';
+```
+
+**Never reimplement a component that already exists.** If a variant is missing, extend the existing component — don't create a parallel one.
+
+### Component patterns
+
+```tsx
+// Button — always use variant + size props, never restyle with className colours
+<Button variant="fill" size="md">Save changes</Button>
+<Button variant="outline" size="sm" leadingIcon={<Search size={16} />}>Search</Button>
+<Button variant="ghost" disabled>Cancel</Button>
+
+// Button as Next.js Link
+<Button asChild variant="fill">
+  <Link href="/dashboard">Go to dashboard</Link>
+</Button>
+
+// Badge — sentiment + contrast + showText axes
+<Badge sentiment="negative" contrast="high">3</Badge>
+<Badge sentiment="positive" contrast="default">Active</Badge>
+<Badge sentiment="warning" showText={false} />  {/* dot */}
+
+// Input — always use the composite component
+<Input
+  label="Email"
+  required
+  hint="Optional"
+  placeholder="you@example.com"
+  caption="We'll never share this."
+  captionType="info"
+/>
+
+// Input with error state — captionType="error" turns the border red
+<Input
+  label="Password"
+  type="password"
+  caption="Must be at least 8 characters"
+  captionType="error"
+/>
+
+// Checkbox with indeterminate (select-all pattern)
+<IndeterminateCheckbox
+  checked={allChecked ? true : noneChecked ? false : 'indeterminate'}
+  onCheckedChange={handleSelectAll}
+/>
+
+// IconWrapper — always pass size, never set width/height manually on the icon
+<IconWrapper icon={<Search />} size="sm" className="text-[color:var(--color-icon-action)]" />
+
+// Divider — horizontal/vertical/labelled
+<Divider orientation="horizontal" />
+<Divider orientation="vertical" />
+<Divider label="or" />
+```
+
+---
+
+## 12. Building new components — the required pattern
+
+Every new component must follow this exact structure:
+
+```tsx
+// 1. Import order
+import * as React from 'react';
+import { SomeRadixPrimitive } from '@radix-ui/react-something';
+import { SomeLucideIcon } from 'lucide-react';
+import { cva, type VariantProps } from 'class-variance-authority';
+import { cn } from '@lamplight/ui';   // or '../../lib/cn' from within packages/ui
+
+// 2. cva for variant axes — map directly to Figma Type × State × Size axes
+const componentVariants = cva(
+  // Base classes — use token vars only
+  ['inline-flex items-center', 'transition-colors duration-150'],
+  {
+    variants: {
+      variant: {
+        primary:   'bg-[var(--color-surface-action)] text-[color:var(--color-text-on-action)]',
+        secondary: 'bg-transparent border border-[color:var(--color-border-action)]',
+      },
+      size: {
+        md: 'px-[var(--spacing-xl)] py-[var(--spacing-lg)]',
+        sm: 'px-[var(--spacing-lg)] py-[var(--spacing-sm)]',
+      },
+    },
+    defaultVariants: { variant: 'primary', size: 'md' },
+  }
+);
+
+// 3. Props interface extends HTML element + VariantProps
+export interface NewComponentProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof componentVariants> {
+  asChild?: boolean;
+}
+
+// 4. forwardRef always
+export const NewComponent = React.forwardRef<HTMLDivElement, NewComponentProps>(
+  ({ variant, size, className, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn(componentVariants({ variant, size }), className)}
+      {...props}
+    />
+  )
+);
+NewComponent.displayName = 'NewComponent';
+
+// 5. Export types alongside the component
+export type { NewComponentProps };
+```
+
+**Checklist for every new component:**
+- [ ] Uses `cva` for variants — no conditional className template literals
+- [ ] Uses `cn()` for class merging — never string concatenation
+- [ ] Uses `React.forwardRef`
+- [ ] Has `displayName`
+- [ ] References only `--color-*`, `--spacing-*`, `--border-radius-*`, `--font-*` vars
+- [ ] Has zero inline `style` props for visual properties
+- [ ] Has `aria-*` attributes for accessibility
+- [ ] Exported from `packages/ui/src/index.ts`
+- [ ] Has a `.stories.tsx` with all variant axes, dark mode, and focus ring stories
+
+---
+
+## 13. cn() — always use it, never concatenate
+
+```tsx
+// ✅ Correct
+className={cn(
+  'base classes',
+  isActive && 'active classes',
+  variant === 'outline' && 'outline classes',
+  className   // always spread className last so consumers can override
+)}
+
+// ❌ Wrong — defeats tailwind-merge conflict resolution
+className={`base ${isActive ? 'active' : ''} ${className}`}
+className={'base ' + className}
+```
+
+---
+
+## 14. Icons — always via IconWrapper or explicit size
+
+Always use Lucide. Never set size via CSS width/height — use the `size` prop or `IconWrapper`.
+
+```tsx
+// ✅ Correct — standalone with explicit prop
+<Search size={16} className="text-[color:var(--color-icon-action)]" aria-hidden />
+
+// ✅ Correct — via IconWrapper for consistent sizing + semantics
+<IconWrapper icon={<Search />} size="sm" className="text-[color:var(--color-icon-action)]" />
+
+// ❌ Wrong — CSS sizing bypasses the wrapper contract
+<Search className="w-4 h-4" />
+<Search style={{ width: 16, height: 16 }} />
+```
+
+---
+
+## 15. Next.js App Router patterns
+
+```tsx
+// Server components (default) — no 'use client', no useState/useEffect
+// Use for: page layouts, data fetching, static content
+
+// Client components — add 'use client' only when needed
+'use client'; // ← required for: useState, useEffect, event handlers, Radix components
+
+// Fonts — always via next/font, never @import in CSS
+import { Open_Sans, Merriweather } from 'next/font/google';
+// The variables --brand-font-family-body/headings are set in layout.tsx already
+// Never import fonts again — just use the CSS var
+
+// Images — always next/image
+import Image from 'next/image';
+
+// Links — always next/link, use asChild on Button to wrap
+import Link from 'next/link';
+<Button asChild><Link href="/path">Label</Link></Button>
+
+// Never use <a> tags for internal navigation
+// Never use <img> tags — always <Image>
+```
+
+---
+
+## 16. File and folder conventions
+
+```
+packages/ui/src/components/
+  ComponentName/
+    ComponentName.tsx      ← component + exported types
+    ComponentName.stories.tsx ← Storybook stories (all variants)
+    index.ts               ← re-export (optional, for cleaner imports)
+
+apps/web/src/
+  app/                     ← Next.js App Router pages
+    (group)/
+      page.tsx
+      layout.tsx
+  components/              ← app-specific, non-library components
+  hooks/                   ← custom hooks
+  lib/                     ← utilities
+```
+
+New components that are design-system primitives → `packages/ui`.
+Page-specific, one-off components → `apps/web/src/components`.
+
+---
+
+## 17. What to do when a token doesn't exist yet
+
+If you need a value that has no token:
+1. Check `tokens/css/mapped.light.css` — it may exist under a different name.
+2. Check `tokens/css/alias.css` for spacing/radius/elevation values.
+3. If it truly doesn't exist, add it to Figma first, re-export tokens, run `npm run tokens`.
+4. **Never** hardcode the value as a stopgap.
+
+Common mistakes:
+```tsx
+// ❌ "I need 20px padding and there's no spacing token for it"
+"p-5"  or  style={{ padding: '20px' }}
+// ✅ Use the nearest token (xl=24 or lg=16) and flag the gap for design review
+
+// ❌ "I need a gray that's between two tokens"
+"text-[#9ca3af]"
+// ✅ Use the nearest semantic token and flag
+```
+
+---
+
+## Quick reference card
+
+| Need | Use |
+|------|-----|
+| Page background | `bg-[var(--color-surface-page)]` |
+| Card background | `bg-[var(--color-surface-raised)] shadow-raised` |
+| Modal background | `bg-[var(--color-surface-overlay)] shadow-modal` |
+| Body text | `text-[color:var(--color-text-body)]` |
+| Secondary text | `text-[color:var(--color-text-body-secondary)]` |
+| Heading text | `text-[color:var(--color-text-headings)] font-[family-name:var(--font-heading)]` |
+| Default border | `border border-[color:var(--color-border-default)]` |
+| Default icon | `text-[color:var(--color-icon-default)]` |
+| 4px spacing | `var(--spacing-xs)` |
+| 8px spacing | `var(--spacing-sm)` |
+| 12px spacing | `var(--spacing-md)` |
+| 16px spacing | `var(--spacing-lg)` |
+| 24px spacing | `var(--spacing-xl)` |
+| 32px spacing | `var(--spacing-2xl)` |
+| 48px spacing | `var(--spacing-3xl)` |
+| Input radius | `rounded-[var(--border-radius-md)]` |
+| Card radius | `rounded-[var(--border-radius-lg)]` |
+| Pill radius | `rounded-[var(--border-radius-full)]` |
+| Heading font | `font-[family-name:var(--font-heading)]` |
+| Body font | `font-[family-name:var(--font-body)]` |
+| Mono font | `font-[family-name:var(--font-mono)]` |
+| Focus ring | `focus-visible:ring-[length:var(--focus-ring-width)] focus-visible:ring-offset-[length:var(--focus-ring-offset)] focus-visible:ring-[var(--color-border-focus)]` |
+| Toast z-index | `z-[var(--brand-z-index-toast)]` |
+| Modal z-index | `z-[var(--brand-z-index-modal)]` |
