@@ -9,12 +9,12 @@
   "scripts": {
     "tokens": "npm run build --workspace=tokens",
     "dev": "npm run tokens && npm run dev --workspace=apps/web",
-    "build": "npm run tokens && npm run build --workspace=packages/ui && npm run build --workspace=apps/web",
+    "build": "npm run tokens && npm run build --workspace=apps/web",
     "storybook": "npm run storybook --workspace=packages/ui",
     "lint": "npm run lint --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present"
   },
-"engines": {
-  "node": "20.x"
-}
+  "engines": {
+    "node": "20.x"
+  }
 }
