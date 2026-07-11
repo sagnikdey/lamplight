@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Merriweather, Open_Sans } from 'next/font/google';
+import { JetBrains_Mono, Merriweather, Open_Sans } from 'next/font/google';
 import { ThemeProvider } from '../components/ThemeProvider';
 import './globals.css';
 
@@ -19,9 +19,16 @@ const openSans = Open_Sans({
   display: 'swap',
 });
 
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+  variable: '--brand-font-family-mono',
+  display: 'swap',
+});
+
 export const metadata: Metadata = {
   title: 'Lamplight Design System',
-  description: 'Token-driven component library',
+  description: 'Token-driven component library and design system documentation',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -29,7 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${merriweather.variable} ${openSans.variable}`}
+      className={`${merriweather.variable} ${openSans.variable} ${jetbrainsMono.variable}`}
     >
       <body>
         <ThemeProvider>{children}</ThemeProvider>
