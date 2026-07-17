@@ -1,7 +1,11 @@
-@import "tailwindcss";
+@import "tailwindcss" source(none);
 
-/* Scan the UI library so its token-based utility classes are generated */
-@source "../../../../packages/ui/src";
+/* Explicit sources only — build output (out/, .next/) contains RSC flight
+   payloads that split className strings and corrupt Tailwind extraction. */
+@source "../**/*.{ts,tsx}";
+@source "../../../../packages/ui/src/**/*.{ts,tsx}";
+@source not "../../out/**";
+@source not "../../.next/**";
 
 /* Lamplight token layers — order is critical: brand → alias → mapped → theme */
 @import "@lamplight/tokens/css/brand";

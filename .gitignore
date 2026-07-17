@@ -1,5 +1,6 @@
 node_modules
 .next
+out
 dist
 storybook-static
 # Token CSS is generated — commit it so CI can diff it
